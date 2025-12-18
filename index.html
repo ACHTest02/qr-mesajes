@@ -1,273 +1,97 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Mensaje del momento</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body {
-      margin: 0;
-      height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-      background: #111;
-      color: #fff;
-      text-align: center;
-    }
-    .mensaje {
-      font-size: 1.7rem;
-      padding: 24px;
-      max-width: 680px;
-    }
-    .sub {
-      margin-top: 18px;
-      font-size: 0.85rem;
-      opacity: 0.6;
-      letter-spacing: 1px;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>Momento</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  body {
+    margin: 0;
+    background: #111;
+    color: #fff;
+    font-family: system-ui, sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    text-align: center;
+  }
+  #contenedor {
+    max-width: 320px;
+    padding: 20px;
+  }
+  #mensaje {
+    font-size: 1.6rem;
+    margin-bottom: 16px;
+  }
+  #sub {
+    opacity: 0.6;
+    font-size: 0.8rem;
+    margin-bottom: 24px;
+  }
+  button {
+    background: #fff;
+    color: #000;
+    border: none;
+    padding: 12px 18px;
+    font-size: 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  canvas {
+    display: none;
+    background: #000;
+    touch-action: none;
+  }
+</style>
 </head>
 <body>
 
-<div>
-  <div class="mensaje" id="mensaje"></div>
-  <div class="sub" id="sub"></div>
+<div id="contenedor">
+  <div id="mensaje"></div>
+  <div id="sub"></div>
+  <button onclick="iniciarSnake()">Jugar Snake</button>
 </div>
 
+<canvas id="juego" width="300" height="300"></canvas>
+
 <script>
-const FRASES = {
+// ===== MENSAJES =====
+const frases = {
   lunes: {
-    mañana: [
-      "Lunes: café cargado, expectativas ligeras.",
-      "Sobrevivir ya es productividad.",
-      "Hoy el mundo arranca... tú decides si sí o no.",
-      "Lunes suave, mente despierta.",
-      "Respira. El lunes no puede hacerte tanto daño.",
-      "Modo lunes: activo pero delicado.",
-      "Hoy sí se vale ir lento.",
-      "Si el lunes fuera persona, no lo agregarías a tus contactos.",
-      "Arranca con estilo, aunque sea lunes.",
-      "Tú 1 — Lunes 0. De momento.",
-      "Café primero, decisiones después.",
-      "Lunes con olor a oportunidad… o a sueño.",
-      "Hoy avanza, aunque sea poquito.",
-      "Que no te gane el lunes.",
-      "Si hoy das 10%, eres leyenda.",
-      "Lunes es solo el tutorial. Lo bueno empieza mañana.",
-      "Hazlo simple: menos drama.",
-      "Tu energía de lunes es un recurso limitado: úsalo bien.",
-      "Pequeño recordatorio: sigues vivo. Con eso basta.",
-      "Hoy no estás lento: el lunes está rápido.",
-      "A veces se gana, a veces es lunes.",
-      "Tu desayuno tiene mejores planes que tú.",
-      "Lunes no es enemigo, solo es imprudente."
-    ],
-    tarde: [
-      "Mitad del lunes superada. Aplausos.",
-      "El sueño de la tarde es parte del contrato.",
-      "Hay lunes que parecen tres. Este es uno.",
-      "Ya pasó lo peor… probablemente.",
-      "Tarde de lunes: modo automático activado.",
-      "No se trabaja: se sobrevive.",
-      "Este lunes pide siesta.",
-      "Todo mejora después de comer.",
-      "La productividad tomó siesta sin avisar.",
-      "Energía en modo ahorro.",
-      "Tu paz vale más que tus pendientes.",
-      "Aún no acaba el día, pero ya se siente largo.",
-      "Rompe el ciclo: tómate un break.",
-      "Tu cerebro ya piensa en mañana.",
-      "Lunes por la tarde es una vibra universal.",
-      "Si no rinde, no importa: es lunes.",
-      "Tú sigue, aunque sea rengueando.",
-      "El lunes ya gastó sus mejores cartas.",
-      "Dale chance a tu cabeza de alcanzarte.",
-      "Tarde tranquila, cero presión.",
-      "Tu ánimo está calibrándose.",
-      "Hoy puedes renegociar todas tus metas.",
-      "Respira, ya casi."
-    ],
-    noche: [
-      "Sobreviviste al lunes. Eso es victoria.",
-      "Lunes vencido. Mañana sube la dificultad.",
-      "Noche de lunes: mereces paz absoluta.",
-      "Hoy el cansancio es legal.",
-      "Desconecta. Tu cerebro quiere vacaciones.",
-      "Cierra el lunes sin remordimientos.",
-      "Recompénsate por existir.",
-      "El lunes no te ganó: solo te retó.",
-      "No pienses mucho. Es lunes, de noche.",
-      "Hoy duermes como campeón.",
-      "Se vale dormir temprano.",
-      "Mañana no será tan lunes.",
-      "Fin del lunes = reinicio mental.",
-      "Tu cama te pidió verte.",
-      "Noche ligera, sin complicaciones.",
-      "Lunes cerrado correctamente.",
-      "Te ganaste un descanso bonito."
-    ]
+    mañana: ["Lunes suave, mente despierta.", "Café primero, decisiones después."],
+    tarde: ["Mitad del lunes superada.", "Modo automático activado."],
+    noche: ["Sobreviviste al lunes.", "Noche de descanso merecido."]
   },
-
   martes: {
-    mañana: [
-      "Martes: el verdadero inicio productivo.",
-      "Hoy sí se puede todo.",
-      "Tu energía subió 20% respecto al lunes.",
-      "Martes huele a avance.",
-      "Hoy el mundo coopera más.",
-      "Dale con ritmo, no con prisa.",
-      "Si el lunes no te tumbó, hoy te impulsa.",
-      "El martes siempre es mejor versión.",
-      "Tu café trabaja horas extra.",
-      "Hoy sí puedes intentar cosas.",
-      "Martes: día premium para empezar algo.",
-      "Hoy fluye mejor.",
-      "Modo martes: eficiente sin drama.",
-      "Estás más despierto que ayer.",
-      "Martes aprobado."
-    ],
-    tarde: [
-      "Tarde activa, cero culpa.",
-      "Martes yendo con buen paso.",
-      "Hoy la tarde sí coopera.",
-      "Energía pareja, mente clara.",
-      "El martes te sienta bien.",
-      "Sigue así: el ritmo es ideal.",
-      "La tarde trae buenas ideas.",
-      "Buen momento para avanzar algo grande.",
-      "Estás en flow sin darte cuenta.",
-      "Martes: la mitad del impulso semanal."
-    ],
-    noche: [
-      "Martes completo con éxito.",
-      "Noche tranquila, logros discretos.",
-      "Hoy hiciste más de lo que crees.",
-      "Buen cierre, cero drama.",
-      "Noche suave, mente ligera.",
-      "Mañana será buen día.",
-      "Martes ganado sin dolor.",
-      "Hoy tu cama te ve con orgullo.",
-      "Te mereces un descanso con buena vibra."
-    ]
+    mañana: ["Martes con mejor energía."],
+    tarde: ["Buen ritmo hoy."],
+    noche: ["Buen cierre de martes."]
   },
-
   miercoles: {
-    mañana: [
-      "Mitad de semana, mitad de ánimo.",
-      "Hoy se siente el progreso.",
-      "Modo miércoles: balance perfecto.",
-      "Energía media, actitud alta.",
-      "Hoy fluyes sin pensarlo.",
-      "Si llegaste hasta aquí, sigues fuerte.",
-      "Miércoles con potencial serio.",
-      "Hoy puedes sorprenderte."
-    ],
-    tarde: [
-      "Tarde de miércoles: equilibrio celestial.",
-      "No corres, avanzas.",
-      "Buen momento para cosas difíciles.",
-      "Energía estable.",
-      "Inspiración ligera pero real.",
-      "Ya casi lo logras."
-    ],
-    noche: [
-      "Miércoles completado con estilo.",
-      "Noche serena.",
-      "Semana formalmente domada.",
-      "Relájate: ya es bajada.",
-      "Hoy duermes con mérito.",
-      "Mañana será más suave."
-    ]
+    mañana: ["Mitad de semana."],
+    tarde: ["Energía estable."],
+    noche: ["Semana domada."]
   },
-
   jueves: {
-    mañana: [
-      "Jueves: ya se siente el fin.",
-      "Hoy el ánimo sube solito.",
-      "Modo jueves: motivación espontánea.",
-      "Fluyes con clase.",
-      "El jueves coopera."
-    ],
-    tarde: [
-      "Tarde con vibra de casi viernes.",
-      "Todo se siente más ligero.",
-      "Buen humor desbloqueado.",
-      "La semana ya te sonríe.",
-      "Jueves rinde más."
-    ],
-    noche: [
-      "Noche con olor a viernes.",
-      "Cierra suave, mañana toca brillar.",
-      "Hoy duermes tranquilo.",
-      "Gran día, mejor cierre."
-    ]
+    mañana: ["Jueves coopera."],
+    tarde: ["Todo más ligero."],
+    noche: ["Noche tranquila."]
   },
-
   viernes: {
-    mañana: [
-      "Viernes: ánimo en modo legendario.",
-      "Hoy todo sabe mejor.",
-      "Viernes te viste bien.",
-      "La agenda se siente ligera.",
-      "Vibra de libertad."
-    ],
-    tarde: [
-      "Tarde de viernes: se desactiva el estrés.",
-      "Modo fiesta en proceso.",
-      "Todo es más soportable.",
-      "Ya casi."
-    ],
-    noche: [
-      "La fiesta llama.",
-      "Noche de viernes: cero excusas.",
-      "Hoy brillas.",
-      "Dale al fin de semana con estilo.",
-      "Tu mood subió oficialmente."
-    ]
+    mañana: ["Viernes activado."],
+    tarde: ["Ya casi."],
+    noche: ["La noche llama."]
   },
-
   sabado: {
-    mañana: [
-      "Sábado: despertar sin culpas.",
-      "Hoy sí se vale todo.",
-      "Mañanas lentas, buenos planes.",
-      "Sábado suavecito."
-    ],
-    tarde: [
-      "Tarde relajada.",
-      "Sábado en pleno.",
-      "Buen momento para todo lo que aplazaste.",
-      "Tu energía es tuya."
-    ],
-    noche: [
-      "Noche libre, cero reglas.",
-      "Hoy fluye sin explicación.",
-      "Sábado pide brillo.",
-      "Sal o quédate: ambos ganan."
-    ]
+    mañana: ["Sábado suave."],
+    tarde: ["Tiempo tuyo."],
+    noche: ["Noche libre."]
   },
-
   domingo: {
-    mañana: [
-      "Domingo tranquilo.",
-      "Hoy respiras más lento.",
-      "Día de calma premium.",
-      "Mañana perfecta para no existir mucho."
-    ],
-    tarde: [
-      "Tarde suave.",
-      "Domingo con sabor a pausa.",
-      "Buen momento para resetear.",
-      "La calma del domingo no se negocia."
-    ],
-    noche: [
-      "Noche de domingo: dudas existenciales gratis.",
-      "Mañana empieza la aventura otra vez.",
-      "Descansa tu cabeza.",
-      "Domingo se despide en cámara lenta."
-    ]
+    mañana: ["Domingo lento."],
+    tarde: ["Pausa necesaria."],
+    noche: ["Descansa."]
   }
 };
 
@@ -280,11 +104,76 @@ let tramo = "mañana";
 if (hora >= 12 && hora < 18) tramo = "tarde";
 if (hora >= 18) tramo = "noche";
 
-const opciones = FRASES[dia][tramo];
-const mensaje = opciones[Math.floor(Math.random() * opciones.length)];
+const opciones = frases[dia][tramo];
+document.getElementById("mensaje").textContent =
+  opciones[Math.floor(Math.random() * opciones.length)];
+document.getElementById("sub").textContent =
+  dia.toUpperCase() + " · " + tramo.toUpperCase();
 
-document.getElementById("mensaje").textContent = mensaje;
-document.getElementById("sub").textContent = `${dia.toUpperCase()} · ${tramo.toUpperCase()}`;
+// ===== SNAKE =====
+const canvas = document.getElementById("juego");
+const ctx = canvas.getContext("2d");
+let snake, dir, food, intervalo;
+
+function iniciarSnake() {
+  document.getElementById("contenedor").style.display = "none";
+  canvas.style.display = "block";
+
+  snake = [{x: 150, y: 150}];
+  dir = {x: 10, y: 0};
+  food = nuevaComida();
+
+  intervalo = setInterval(loop, 120);
+}
+
+function loop() {
+  const head = {x: snake[0].x + dir.x, y: snake[0].y + dir.y};
+
+  if (head.x < 0 || head.y < 0 || head.x >= 300 || head.y >= 300) {
+    return reset();
+  }
+
+  snake.unshift(head);
+
+  if (head.x === food.x && head.y === food.y) {
+    food = nuevaComida();
+  } else {
+    snake.pop();
+  }
+
+  ctx.clearRect(0,0,300,300);
+  ctx.fillStyle = "#0f0";
+  snake.forEach(p => ctx.fillRect(p.x, p.y, 10, 10));
+  ctx.fillStyle = "#f00";
+  ctx.fillRect(food.x, food.y, 10, 10);
+}
+
+function nuevaComida() {
+  return {
+    x: Math.floor(Math.random() * 30) * 10,
+    y: Math.floor(Math.random() * 30) * 10
+  };
+}
+
+function reset() {
+  clearInterval(intervalo);
+  canvas.style.display = "none";
+  document.getElementById("contenedor").style.display = "block";
+}
+
+// Controles táctiles simples
+document.addEventListener("touchstart", e => {
+  const t = e.touches[0];
+  const cx = window.innerWidth / 2;
+  const cy = window.innerHeight / 2;
+  const dx = t.clientX - cx;
+  const dy = t.clientY - cy;
+  if (Math.abs(dx) > Math.abs(dy)) {
+    dir = dx > 0 ? {x:10,y:0} : {x:-10,y:0};
+  } else {
+    dir = dy > 0 ? {x:0,y:10} : {x:0,y:-10};
+  }
+});
 </script>
 
 </body>
