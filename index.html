@@ -25,11 +25,17 @@
 
   #mensaje {
     font-size: 1.2rem;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
+  }
+
+  #vidas {
+    font-size: 0.9rem;
+    opacity: 0.8;
+    margin-bottom: 6px;
   }
 
   button {
-    margin-top: 10px;
+    margin-top: 8px;
     padding: 12px 20px;
     font-size: 1rem;
     border-radius: 8px;
@@ -39,7 +45,7 @@
 
   canvas {
     display: block;
-    margin: 16px auto 6px;
+    margin: 14px auto 6px;
     background: #000;
     border: 3px solid #fff;
     border-radius: 10px;
@@ -57,11 +63,12 @@
 <div id="contenedor">
 
   <div id="mensaje"></div>
+  <div id="vidas"></div>
 
   <button onclick="iniciarSnake()">Jugar Snake</button>
 
-  <!-- Área +20% vertical -->
-  <canvas id="canvas" width="320" height="384"></canvas>
+  <!-- Área +40% vertical total -->
+  <canvas id="canvas" width="320" height="460"></canvas>
 
   <div id="instrucciones">Desliza el dedo para mover el snake</div>
 
@@ -71,41 +78,13 @@
 /* ========= MENSAJE POR DÍA Y HORA ========= */
 
 const mensajes = {
-  lunes: {
-    mañana: "Lunes suave, mente despierta.",
-    tarde: "El lunes ya gastó sus mejores cartas.",
-    noche: "Sobreviviste al lunes."
-  },
-  martes: {
-    mañana: "Martes: ahora sí.",
-    tarde: "Buen ritmo.",
-    noche: "Martes ganado."
-  },
-  miercoles: {
-    mañana: "Mitad lograda.",
-    tarde: "Equilibrio.",
-    noche: "Semana domada."
-  },
-  jueves: {
-    mañana: "Jueves coopera.",
-    tarde: "Ya casi.",
-    noche: "Huele a viernes."
-  },
-  viernes: {
-    mañana: "Viernes aprobado.",
-    tarde: "Modo fin.",
-    noche: "La noche llama."
-  },
-  sabado: {
-    mañana: "Sin culpas.",
-    tarde: "El día es tuyo.",
-    noche: "Noche libre."
-  },
-  domingo: {
-    mañana: "Calma premium.",
-    tarde: "Pausa.",
-    noche: "Mañana empieza."
-  }
+  lunes: { mañana:"Lunes suave, mente despierta.", tarde:"El lunes ya gastó sus mejores cartas.", noche:"Sobreviviste al lunes." },
+  martes:{ mañana:"Martes: ahora sí.", tarde:"Buen ritmo.", noche:"Martes ganado." },
+  miercoles:{ mañana:"Mitad lograda.", tarde:"Equilibrio.", noche:"Semana domada." },
+  jueves:{ mañana:"Jueves coopera.", tarde:"Ya casi.", noche:"Huele a viernes." },
+  viernes:{ mañana:"Viernes aprobado.", tarde:"Modo fin.", noche:"La noche llama." },
+  sabado:{ mañana:"Sin culpas.", tarde:"El día es tuyo.", noche:"Noche libre." },
+  domingo:{ mañana:"Calma premium.", tarde:"Pausa.", noche:"Mañana empieza." }
 };
 
 function mostrarMensaje() {
@@ -133,14 +112,25 @@ const tilesX = canvas.width / grid;
 const tilesY = canvas.height / grid;
 
 let snake, dir, food, intervalo;
+let vidas = 3;
+
+function actualizarVidas() {
+  document.getElementById("vidas").innerText = "Vidas: " + "❤️".repeat(vidas);
+}
 
 function iniciarSnake() {
-  snake = [{ x: 8, y: 8 }];
-  dir = { x: 0, y: 0 };
-  food = nuevaComida();
+  vidas = 3;
+  resetSnake();
+  actualizarVidas();
 
   clearInterval(intervalo);
   intervalo = setInterval(juego, 200);
+}
+
+function resetSnake() {
+  snake = [{ x: Math.floor(tilesX / 2), y: Math.floor(tilesY / 2) }];
+  dir = { x: 0, y: 0 };
+  food = nuevaComida();
 }
 
 function nuevaComida() {
@@ -158,12 +148,23 @@ function juego() {
     y: snake[0].y + dir.y
   };
 
-  // Bordes
+  // Colisión con bordes
   if (
     cabeza.x < 0 || cabeza.y < 0 ||
     cabeza.x >= tilesX || cabeza.y >= tilesY
   ) {
-    dir = { x: 0, y: 0 };
+    vidas--;
+    actualizarVidas();
+
+    if (vidas <= 0) {
+      clearInterval(intervalo);
+      ctx.fillStyle = "#fff";
+      ctx.font = "16px sans-serif";
+      ctx.fillText("Game Over", 110, canvas.height / 2);
+      return;
+    }
+
+    resetSnake();
     return;
   }
 
