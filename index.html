@@ -2,176 +2,200 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Momento</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mensaje del Momento</title>
+
 <style>
   body {
     margin: 0;
+    font-family: system-ui, sans-serif;
     background: #111;
     color: #fff;
-    font-family: system-ui, sans-serif;
     display: flex;
     align-items: center;
     justify-content: center;
     height: 100vh;
     text-align: center;
   }
+
   #contenedor {
     max-width: 320px;
     padding: 20px;
   }
-  #mensaje {
-    font-size: 1.6rem;
-    margin-bottom: 16px;
-  }
-  #sub {
-    opacity: 0.6;
-    font-size: 0.8rem;
-    margin-bottom: 24px;
-  }
+
   button {
+    margin-top: 20px;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
     background: #fff;
     color: #000;
-    border: none;
-    padding: 12px 18px;
     font-size: 1rem;
-    border-radius: 8px;
     cursor: pointer;
   }
-  canvas {
+
+  #juego {
+    margin-top: 20px;
     display: none;
+  }
+
+  canvas {
     background: #000;
+    border: 2px solid #fff; /* ÁREA DELIMITADA */
+    border-radius: 8px;
     touch-action: none;
+  }
+
+  #instrucciones {
+    font-size: 0.75rem;
+    opacity: 0.6;
+    margin-top: 10px;
   }
 </style>
 </head>
-<body>
 
+<body>
 <div id="contenedor">
+
   <div id="mensaje"></div>
-  <div id="sub"></div>
+
   <button onclick="iniciarSnake()">Jugar Snake</button>
+
+  <div id="juego">
+    <canvas id="canvas" width="300" height="300"></canvas>
+    <div id="instrucciones">Desliza el dedo para cambiar dirección</div>
+  </div>
+
 </div>
 
-<canvas id="juego" width="300" height="300"></canvas>
-
 <script>
-// ===== MENSAJES =====
-const frases = {
+/* ---------- MENSAJES ---------- */
+
+const mensajes = {
   lunes: {
-    mañana: ["Lunes suave, mente despierta.", "Café primero, decisiones después."],
-    tarde: ["Mitad del lunes superada.", "Modo automático activado."],
-    noche: ["Sobreviviste al lunes.", "Noche de descanso merecido."]
+    mañana: "Lunes suave, mente despierta.",
+    tarde: "El lunes ya gastó sus mejores cartas.",
+    noche: "Sobreviviste al lunes. Victoria."
   },
   martes: {
-    mañana: ["Martes con mejor energía."],
-    tarde: ["Buen ritmo hoy."],
-    noche: ["Buen cierre de martes."]
+    mañana: "Martes: el verdadero inicio.",
+    tarde: "Buen ritmo, sigue así.",
+    noche: "Martes ganado sin drama."
   },
   miercoles: {
-    mañana: ["Mitad de semana."],
-    tarde: ["Energía estable."],
-    noche: ["Semana domada."]
+    mañana: "Mitad de semana, sigues firme.",
+    tarde: "Equilibrio perfecto.",
+    noche: "Semana domada."
   },
   jueves: {
-    mañana: ["Jueves coopera."],
-    tarde: ["Todo más ligero."],
-    noche: ["Noche tranquila."]
+    mañana: "Jueves coopera.",
+    tarde: "Ya se siente el final.",
+    noche: "Huele a viernes."
   },
   viernes: {
-    mañana: ["Viernes activado."],
-    tarde: ["Ya casi."],
-    noche: ["La noche llama."]
+    mañana: "Viernes aprobado.",
+    tarde: "Modo fin activado.",
+    noche: "La noche llama."
   },
   sabado: {
-    mañana: ["Sábado suave."],
-    tarde: ["Tiempo tuyo."],
-    noche: ["Noche libre."]
+    mañana: "Despertar sin culpas.",
+    tarde: "El día es tuyo.",
+    noche: "Noche libre."
   },
   domingo: {
-    mañana: ["Domingo lento."],
-    tarde: ["Pausa necesaria."],
-    noche: ["Descansa."]
+    mañana: "Calma premium.",
+    tarde: "Pausa necesaria.",
+    noche: "Mañana empieza de nuevo."
   }
 };
 
-const ahora = new Date();
-const dias = ["domingo","lunes","martes","miercoles","jueves","viernes","sabado"];
-const dia = dias[ahora.getDay()];
-const hora = ahora.getHours();
+function mostrarMensaje() {
+  const ahora = new Date();
+  const dias = ["domingo","lunes","martes","miercoles","jueves","viernes","sabado"];
+  const dia = dias[ahora.getDay()];
+  const hora = ahora.getHours();
 
-let tramo = "mañana";
-if (hora >= 12 && hora < 18) tramo = "tarde";
-if (hora >= 18) tramo = "noche";
+  let segmento = "mañana";
+  if (hora >= 13 && hora < 19) segmento = "tarde";
+  if (hora >= 19) segmento = "noche";
 
-const opciones = frases[dia][tramo];
-document.getElementById("mensaje").textContent =
-  opciones[Math.floor(Math.random() * opciones.length)];
-document.getElementById("sub").textContent =
-  dia.toUpperCase() + " · " + tramo.toUpperCase();
+  document.getElementById("mensaje").innerText = mensajes[dia][segmento];
+}
 
-// ===== SNAKE =====
-const canvas = document.getElementById("juego");
-const ctx = canvas.getContext("2d");
+mostrarMensaje();
+
+/* ---------- SNAKE ---------- */
+
+let canvas = document.getElementById("canvas");
+let ctx = canvas.getContext("2d");
 let snake, dir, food, intervalo;
 
 function iniciarSnake() {
-  document.getElementById("contenedor").style.display = "none";
-  canvas.style.display = "block";
+  document.getElementById("juego").style.display = "block";
 
   snake = [{x: 150, y: 150}];
-  dir = {x: 10, y: 0};
-  food = nuevaComida();
+  dir = {x: 0, y: 0};
+  food = generarComida();
 
-  intervalo = setInterval(loop, 120);
+  ctx.clearRect(0, 0, 300, 300);
+  ctx.fillStyle = "#fff";
+  ctx.font = "14px sans-serif";
+  ctx.fillText("Desliza para moverte", 70, 150);
+
+  setTimeout(() => {
+    intervalo = setInterval(loop, 180);
+  }, 1000);
+}
+
+function generarComida() {
+  return {
+    x: Math.floor(Math.random() * 15) * 20,
+    y: Math.floor(Math.random() * 15) * 20
+  };
 }
 
 function loop() {
-  const head = {x: snake[0].x + dir.x, y: snake[0].y + dir.y};
+  let head = {x: snake[0].x + dir.x, y: snake[0].y + dir.y};
 
   if (head.x < 0 || head.y < 0 || head.x >= 300 || head.y >= 300) {
-    return reset();
+    dir = {x: 0, y: 0};
+    return;
   }
 
   snake.unshift(head);
 
   if (head.x === food.x && head.y === food.y) {
-    food = nuevaComida();
+    food = generarComida();
   } else {
     snake.pop();
   }
 
-  ctx.clearRect(0,0,300,300);
-  ctx.fillStyle = "#0f0";
-  snake.forEach(p => ctx.fillRect(p.x, p.y, 10, 10));
-  ctx.fillStyle = "#f00";
-  ctx.fillRect(food.x, food.y, 10, 10);
+  ctx.clearRect(0, 0, 300, 300);
+
+  ctx.fillStyle = "red";
+  ctx.fillRect(food.x, food.y, 20, 20);
+
+  ctx.fillStyle = "lime";
+  snake.forEach(p => ctx.fillRect(p.x, p.y, 20, 20));
 }
 
-function nuevaComida() {
-  return {
-    x: Math.floor(Math.random() * 30) * 10,
-    y: Math.floor(Math.random() * 30) * 10
-  };
-}
+/* ---------- CONTROLES TÁCTILES ---------- */
 
-function reset() {
-  clearInterval(intervalo);
-  canvas.style.display = "none";
-  document.getElementById("contenedor").style.display = "block";
-}
+let startX, startY;
 
-// Controles táctiles simples
-document.addEventListener("touchstart", e => {
-  const t = e.touches[0];
-  const cx = window.innerWidth / 2;
-  const cy = window.innerHeight / 2;
-  const dx = t.clientX - cx;
-  const dy = t.clientY - cy;
+canvas.addEventListener("touchstart", e => {
+  startX = e.touches[0].clientX;
+  startY = e.touches[0].clientY;
+});
+
+canvas.addEventListener("touchend", e => {
+  let dx = e.changedTouches[0].clientX - startX;
+  let dy = e.changedTouches[0].clientY - startY;
+
   if (Math.abs(dx) > Math.abs(dy)) {
-    dir = dx > 0 ? {x:10,y:0} : {x:-10,y:0};
+    dir = dx > 0 ? {x: 20, y: 0} : {x: -20, y: 0};
   } else {
-    dir = dy > 0 ? {x:0,y:10} : {x:0,y:-10};
+    dir = dy > 0 ? {x: 0, y: 20} : {x: 0, y: -20};
   }
 });
 </script>
