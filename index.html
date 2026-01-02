@@ -574,7 +574,7 @@ const mensajes = {
   }
 };
 
-/* ========= MENSAJE ACTUAL ========= */
+/* ========= MENSAJE + EASTER EGG ========= */
 
 function mostrarMensaje() {
   const ahora = new Date();
@@ -586,8 +586,18 @@ function mostrarMensaje() {
   if (hora >= 13 && hora < 19) momento = "tarde";
   if (hora >= 19) momento = "noche";
 
-  const lista = mensajes[dia][momento];
-  const texto = lista[Math.floor(Math.random() * lista.length)];
+  let visitas = Number(localStorage.getItem("visitas") || 0);
+  visitas++;
+  localStorage.setItem("visitas", visitas);
+
+  let texto;
+  if (visitas > 5 && !localStorage.getItem("easter")) {
+    texto = "Te vi. Estás buscando algo ;) <br>Gracias por ser parte de mi proyecto";
+    localStorage.setItem("easter", "true");
+  } else {
+    const lista = mensajes[dia][momento];
+    texto = lista[Math.floor(Math.random() * lista.length)];
+  }
 
   document.getElementById("mensaje").innerHTML =
     texto +
